@@ -20,16 +20,7 @@
       background: white;
       border: 2px solid black;
       max-width: 100%;
-      touch-action: none;
-      -ms-touch-action: none;
       touch-action: manipulation;
-    }
-    .action-button {
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .action-button:active {
-      transform: scale(0.97);
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
     }
     .action-button {
       background: #ff1a1a;
@@ -40,20 +31,22 @@
       cursor: pointer;
       margin: 10px 8px;
       border: none;
+      transition: transform 0.1s, box-shadow 0.1s;
     }
-    #imageUpload {
-      margin: 10px;
+    .action-button:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
     }
   </style>
 </head>
 <body>
   <h1>Simpcoin Image Maker</h1>
-  <label for="imageUpload" class="action-button" style="display: inline-block; cursor: pointer;">Choose Image</label>
+  <label for="imageUpload" class="action-button">Choose Image</label>
   <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
   <canvas id="canvas"></canvas>
   <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
-  <button id="shareXBtn" class="action-button">Share</button>
+  <button id="randomLogoBtn" class="action-button">Randomize Logo</button>
 
   <script>
     const logo = new Image();
@@ -62,7 +55,7 @@
 
     let logoReady = false;
     let logoX = 0, logoY = 0;
-    let logoWidth = 600, logoHeight = logoWidth / 3;
+    let logoWidth = 0, logoHeight = 0;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
 
@@ -98,11 +91,14 @@
     });
 
     function resizeCanvasToImage() {
-      const aspectRatio = uploadedImage.width / uploadedImage.height;
       const drawWidth = uploadedImage.width * 2;
-      const drawHeight = drawWidth / aspectRatio;
+      const drawHeight = uploadedImage.height * 2;
       canvas.width = drawWidth;
       canvas.height = drawHeight;
+
+      // Auto scale logo to 25% of canvas width
+      logoWidth = 1800;
+      logoHeight = logoWidth / 3;
     }
 
     function centerLogo() {
@@ -112,10 +108,8 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
-      if (logoReady) {
-        ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-      }
+      if (imageLoaded) ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+      if (logoReady) ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
     }
 
     canvas.addEventListener("mousedown", (e) => {
@@ -141,7 +135,6 @@
     });
 
     document.addEventListener("mouseup", () => dragging = false);
-
     canvas.addEventListener("mouseleave", () => dragging = false);
 
     canvas.addEventListener("touchstart", (e) => {
@@ -172,22 +165,24 @@
 
     canvas.addEventListener("touchend", () => dragging = false);
 
-    document.getElementById("shareXBtn").addEventListener("click", () => {
-      canvas.toBlob((blob) => {
-        if (!blob) return alert("Could not create image.");
+    document.getElementById("resetLogoBtn").addEventListener("click", () => {
+      centerLogo();
+      draw();
+    });
 
-        const file = new File([blob], "simpcoin-image.png", { type: "image/png" });
-        const shareData = {
-          files: [file],
-          text: "Just made this with Simpcoin Image Maker! #Simpcoin",
-        };
+    document.getElementById("randomLogoBtn").addEventListener("click", () => {
+      if (imageLoaded && logoReady) {
+        logoX = Math.random() * (canvas.width - logoWidth);
+        logoY = Math.random() * (canvas.height - logoHeight);
+        draw();
+      }
+    });
 
-        if (navigator.canShare && navigator.canShare(shareData)) {
-          navigator.share(shareData).catch(() => alert("Share failed"));
-        } else {
-          alert("Sharing not supported in this browser.");
-        }
-      });
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const link = document.createElement("a");
+      link.download = "simpcoin-image.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
     });
   </script>
 </body>
