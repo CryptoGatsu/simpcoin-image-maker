@@ -47,6 +47,7 @@
   </div>
   <button id="randomLogoBtn" class="action-button">Randomize Logo</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
+  <button id="shareBtn" class="action-button">Share</button>
   <button id="saveBtn" class="action-button">Save Image</button>
 
   <script>
@@ -173,6 +174,24 @@
         logoY = Math.random() * (canvas.height - logoHeight);
         draw();
       }
+    });
+
+    document.getElementById("shareBtn").addEventListener("click", () => {
+      canvas.toBlob((blob) => {
+        if (!blob) return alert("Could not create image.");
+
+        const file = new File([blob], "simpcoin-image.png", { type: "image/png" });
+        const shareData = {
+          files: [file],
+          text: "Just made this with Simpcoin Image Maker! #Simpcoin",
+        };
+
+        if (navigator.canShare && navigator.canShare(shareData)) {
+          navigator.share(shareData).catch(() => alert("Share failed"));
+        } else {
+          alert("Sharing not supported in this browser.");
+        }
+      });
     });
 
     document.getElementById("saveBtn").addEventListener("click", () => {
