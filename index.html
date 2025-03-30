@@ -41,8 +41,10 @@
 </head>
 <body>
   <h1>Simpcoin Image Maker</h1>
-  <label for="imageUpload" class="action-button">Choose Image</label>
-  <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
+  <div id="uploadWrapper">
+    <label for="imageUpload" class="action-button">Choose Image</label>
+    <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
+  </div>
   <canvas id="canvas"></canvas>
   <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
@@ -70,6 +72,10 @@
       logoReady = true;
       if (!imageLoaded) centerLogo();
       if (imageLoaded) draw();
+          const wrapper = document.getElementById('uploadWrapper');
+          if (wrapper && canvas && canvas.parentNode) {
+            canvas.parentNode.insertBefore(wrapper, canvas.nextSibling);
+          }
     };
 
     fileInput.addEventListener("change", (e) => {
