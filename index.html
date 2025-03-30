@@ -49,8 +49,7 @@
   <label for="imageUpload" class="action-button" style="display: inline-block; cursor: pointer;">Choose Image</label>
   <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
   <canvas id="canvas"></canvas>
-  <button id="fitToggleBtn" class="action-button" style="display: none;">Fit to Screen (Mobile)</button>
-  <button id="saveBtn" class="action-button">Save Image</button>
+    <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
   <button id="shareXBtn" class="action-button">Share</button>
 
@@ -68,16 +67,13 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const fileInput = document.getElementById("imageUpload");
-    const fitToggleBtn = document.getElementById("fitToggleBtn");
-
+    
     let uploadedImage = new Image();
     let imageLoaded = false;
     let fitToScreen = false;
 
     logo.onload = () => {
-      if (window.innerWidth <= 768) {
-        fitToggleBtn.style.display = 'inline-block';
-      }
+      
       logoReady = true;
       centerLogo();
       if (imageLoaded) draw();
@@ -101,13 +97,7 @@
       reader.readAsDataURL(file);
     });
 
-    fitToggleBtn.addEventListener("click", () => {
-      fitToScreen = !fitToScreen;
-      resizeCanvasToImage();
-      draw();
-    });
-
-    function resizeCanvasToImage() {
+        function resizeCanvasToImage() {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.6;
       const aspectRatio = uploadedImage.width / uploadedImage.height;
@@ -157,7 +147,7 @@
         const rect = canvas.getBoundingClientRect();
         logoX = e.clientX - rect.left - offsetX;
         logoY = e.clientY - rect.top - offsetY;
-                draw();
+        draw();
       }
     });
     canvas.addEventListener("mouseup", () => dragging = false);
