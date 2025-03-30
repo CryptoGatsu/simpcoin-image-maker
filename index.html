@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,6 +93,7 @@
       let scale = 1;
 
       let lastTouchDistance = 0;
+      let isPinching = false;
 
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
@@ -196,11 +196,12 @@
           const touch1 = e.touches[0];
           const touch2 = e.touches[1];
           lastTouchDistance = getDistance(touch1, touch2);
+          isPinching = true;
         }
       }, { passive: false });
 
       canvas.addEventListener("touchmove", (e) => {
-        if (e.touches.length === 2) {
+        if (isPinching && e.touches.length === 2) {
           const touch1 = e.touches[0];
           const touch2 = e.touches[1];
           const currentTouchDistance = getDistance(touch1, touch2);
@@ -213,6 +214,7 @@
       }, { passive: false });
 
       canvas.addEventListener("touchend", () => {
+        isPinching = false;
         lastTouchDistance = 0;
       });
 
