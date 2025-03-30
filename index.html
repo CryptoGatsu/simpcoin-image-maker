@@ -75,7 +75,7 @@
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
 
   <label id="logoSizeLabel" for="logoSizeSlider">Logo Size</label>
-  <input type="range" id="logoSizeSlider" min="100" max="500" step="10" value="300" />
+  <input type="range" id="logoSizeSlider" min="100" max="1000" step="10" value="300" />
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
@@ -92,6 +92,8 @@
       let offsetX = 0;
       let offsetY = 0;
       let scale = 1;
+
+      let lastTouchDistance = 0;
 
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
@@ -188,40 +190,37 @@
         draw();
       });
 
-      // Mobile touch drag events
+      // Mobile pinch-to-scale functionality
       canvas.addEventListener("touchstart", (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-
-        if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
-          dragging = true;
-          offsetX = x - logoX;
-          offsetY = y - logoY;
-
-          e.preventDefault();
+        if (e.touches.length === 2) {
+          const touch1 = e.touches[0];
+          const touch2 = e.touches[1];
+          lastTouchDistance = getDistance(touch1, touch2);
         }
       }, { passive: false });
 
       canvas.addEventListener("touchmove", (e) => {
-        if (dragging) {
-          const rect = canvas.getBoundingClientRect();
-          const touch = e.touches[0];
-          const x = touch.clientX - rect.left;
-          const y = touch.clientY - rect.top;
-
-          logoX = x - offsetX;
-          logoY = y - offsetY;
+        if (e.touches.length === 2) {
+          const touch1 = e.touches[0];
+          const touch2 = e.touches[1];
+          const currentTouchDistance = getDistance(touch1, touch2);
+          const scaleChange = currentTouchDistance / lastTouchDistance;
+          scale *= scaleChange;
+          lastTouchDistance = currentTouchDistance;
           draw();
-
           e.preventDefault();
         }
       }, { passive: false });
 
       canvas.addEventListener("touchend", () => {
-        dragging = false;
-      }, { passive: false });
+        lastTouchDistance = 0;
+      });
+
+      function getDistance(touch1, touch2) {
+        const dx = touch2.clientX - touch1.clientX;
+        const dy = touch2.clientY - touch1.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
 
       document.getElementById("saveBtn").addEventListener("click", () => {
         const link = document.createElement("a");
