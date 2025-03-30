@@ -135,6 +135,45 @@
         }
       }
 
+      // Mobile touch drag events
+      canvas.addEventListener("touchstart", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        // Check if the touch is inside the logo
+        if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
+          dragging = true;
+          offsetX = x - logoX;
+          offsetY = y - logoY;
+
+          // Prevent the default touch behavior (scrolling)
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchmove", (e) => {
+        if (dragging) {
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+
+          logoX = x - offsetX;
+          logoY = y - offsetY;
+          draw();
+
+          // Prevent the default touch behavior (scrolling)
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", () => {
+        dragging = false;
+      }, { passive: false });
+
+      // Desktop mouse drag events
       canvas.addEventListener("mousedown", (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
