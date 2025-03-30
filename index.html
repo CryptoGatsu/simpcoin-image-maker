@@ -93,12 +93,8 @@
     });
 
     function resizeCanvasToImage() {
-      const aspectRatio = uploadedImage.width / uploadedImage.height;
-      const maxWidth = Math.min(window.innerWidth * 0.8, uploadedImage.width);
-      const drawWidth = maxWidth;
-      const drawHeight = drawWidth / aspectRatio;
-      canvas.width = drawWidth;
-      canvas.height = drawHeight;
+      canvas.width = uploadedImage.width;
+      canvas.height = uploadedImage.height;
     }
 
     function centerLogo() {
