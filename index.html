@@ -70,6 +70,9 @@
 
     logo.onload = () => {
       logoReady = true;
+      // Recalculate logo dimensions after logo loads
+      logoWidth = window.innerWidth <= 768 ? 1080 * 1.25 : 1080;
+      logoHeight = logoWidth / 3;
       if (!imageLoaded) centerLogo();
       if (imageLoaded) draw();
     };
@@ -93,8 +96,15 @@
     });
 
     function resizeCanvasToImage() {
+      const scaleRatio = Math.min(
+        window.innerWidth * 0.9 / uploadedImage.width,
+        window.innerHeight * 0.6 / uploadedImage.height,
+        1
+      );
       canvas.width = uploadedImage.width;
       canvas.height = uploadedImage.height;
+      canvas.style.width = uploadedImage.width * scaleRatio + "px";
+      canvas.style.height = uploadedImage.height * scaleRatio + "px";
     }
 
     function centerLogo() {
@@ -110,8 +120,10 @@
 
     canvas.addEventListener("mousedown", (e) => {
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
       if (logoReady && x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
         dragging = true;
         offsetX = x - logoX;
@@ -122,8 +134,10 @@
     canvas.addEventListener("mousemove", (e) => {
       if (dragging) {
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
         logoX = x - offsetX;
         logoY = y - offsetY;
         draw();
@@ -136,8 +150,10 @@
     canvas.addEventListener("touchstart", (e) => {
       if (e.touches.length === 1) {
         const rect = canvas.getBoundingClientRect();
-        const x = e.touches[0].clientX - rect.left;
-        const y = e.touches[0].clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (e.touches[0].clientX - rect.left) * scaleX;
+      const y = (e.touches[0].clientY - rect.top) * scaleY;
         if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
           dragging = true;
           offsetX = x - logoX;
@@ -150,8 +166,10 @@
     canvas.addEventListener("touchmove", (e) => {
       if (dragging && e.touches.length === 1) {
         const rect = canvas.getBoundingClientRect();
-        const x = e.touches[0].clientX - rect.left;
-        const y = e.touches[0].clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.touches[0].clientX - rect.left) * scaleX;
+        const y = (e.touches[0].clientY - rect.top) * scaleY;
         logoX = x - offsetX;
         logoY = y - offsetY;
         draw();
