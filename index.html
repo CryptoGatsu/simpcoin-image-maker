@@ -47,12 +47,14 @@
   </div>
 
   <script>
+window.onload = function() {
+
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const fileInput = document.getElementById("imageUpload");
 
     const logo = new Image();
-    logo.src = "/SimpcoinLogo.png";
+    logo.src = "SimpcoinLogo.png";
 
     let bgImage = null;
     let logoX = 300, logoY = 200, logoWidth = 150;
@@ -116,6 +118,7 @@
       const logoHeight = logoWidth * logoAspectRatio;
       ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
       requestAnimationFrame(draw);
+};
     }
 
     function getTouchPos(touch) {
@@ -190,6 +193,7 @@
     });
 
     requestAnimationFrame(draw);
+};
   </script>
 </body>
 </html>
