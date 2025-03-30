@@ -21,6 +21,8 @@
       border: 2px solid black;
       max-width: 100%;
       touch-action: none;
+      -ms-touch-action: none;
+      touch-action: manipulation;
     }
     .action-button {
       transition: transform 0.1s, box-shadow 0.1s;
@@ -49,7 +51,7 @@
   <label for="imageUpload" class="action-button" style="display: inline-block; cursor: pointer;">Choose Image</label>
   <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
   <canvas id="canvas"></canvas>
-    <button id="saveBtn" class="action-button">Save Image</button>
+  <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
   <button id="shareXBtn" class="action-button">Share</button>
 
@@ -60,22 +62,20 @@
 
     let logoReady = false;
     let logoX = 0, logoY = 0;
-    let logoWidth = 450, logoHeight = logoWidth / 3;
+    let logoWidth = 600, logoHeight = logoWidth / 3;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
 
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const fileInput = document.getElementById("imageUpload");
-    
+
     let uploadedImage = new Image();
     let imageLoaded = false;
-    let fitToScreen = false;
 
     logo.onload = () => {
-      
       logoReady = true;
-      centerLogo();
+      if (!imageLoaded) centerLogo();
       if (imageLoaded) draw();
     };
 
@@ -97,23 +97,10 @@
       reader.readAsDataURL(file);
     });
 
-        function resizeCanvasToImage() {
-      const maxWidth = window.innerWidth * 0.9;
-      const maxHeight = window.innerHeight * 0.6;
+    function resizeCanvasToImage() {
       const aspectRatio = uploadedImage.width / uploadedImage.height;
-
-      let drawWidth = uploadedImage.width * 2;
-      let drawHeight = uploadedImage.height * 2;
-
-      if (fitToScreen || drawWidth > maxWidth) {
-        drawWidth = maxWidth;
-        drawHeight = drawWidth / aspectRatio;
-      }
-      if (drawHeight > maxHeight) {
-        drawHeight = maxHeight;
-        drawWidth = drawHeight * aspectRatio;
-      }
-
+      const drawWidth = uploadedImage.width * 2;
+      const drawHeight = drawWidth / aspectRatio;
       canvas.width = drawWidth;
       canvas.height = drawHeight;
     }
@@ -135,7 +122,7 @@
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
+      if (logoReady && x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
         dragging = true;
         offsetX = x - logoX;
         offsetY = y - logoY;
@@ -145,12 +132,16 @@
     canvas.addEventListener("mousemove", (e) => {
       if (dragging) {
         const rect = canvas.getBoundingClientRect();
-        logoX = e.clientX - rect.left - offsetX;
-        logoY = e.clientY - rect.top - offsetY;
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        logoX = x - offsetX;
+        logoY = y - offsetY;
         draw();
       }
     });
-    canvas.addEventListener("mouseup", () => dragging = false);
+
+    document.addEventListener("mouseup", () => dragging = false);
+
     canvas.addEventListener("mouseleave", () => dragging = false);
 
     canvas.addEventListener("touchstart", (e) => {
@@ -180,18 +171,6 @@
     }, { passive: false });
 
     canvas.addEventListener("touchend", () => dragging = false);
-
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      const link = document.createElement("a");
-      link.download = "simpcoin-image.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    });
-
-    document.getElementById("resetLogoBtn").addEventListener("click", () => {
-      centerLogo();
-      draw();
-    });
 
     document.getElementById("shareXBtn").addEventListener("click", () => {
       canvas.toBlob((blob) => {
