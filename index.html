@@ -45,21 +45,17 @@
     }
 
     #logoSizeSlider {
-      display: none;
-      margin-top: 10px;
+      margin-top: 20px;
       width: 80%;
+      margin-bottom: 20px;
     }
 
     #logoSizeLabel {
-      display: none;
+      margin-bottom: 10px;
     }
 
-    @media (min-width: 768px) {
+    @media (max-width: 768px) {
       #logoSizeSlider {
-        display: block;
-      }
-
-      #logoSizeLabel {
         display: block;
       }
     }
@@ -70,11 +66,14 @@
   <label for="imageUpload" class="action-button" style="display: inline-block; cursor: pointer;">Choose Image</label>
   <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
   <canvas id="canvas"></canvas>
-  <button id="saveBtn" class="action-button">Save Image</button>
-  <button id="resetLogoBtn" class="action-button">Reset Logo</button>
 
+  <!-- Logo Scaling Slider -->
   <label id="logoSizeLabel" for="logoSizeSlider">Logo Size</label>
   <input type="range" id="logoSizeSlider" min="100" max="1000" step="10" value="300" />
+
+  <!-- Action Buttons -->
+  <button id="saveBtn" class="action-button">Save Image</button>
+  <button id="resetLogoBtn" class="action-button">Reset Logo</button>
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
@@ -98,7 +97,6 @@
       const logoSizeSlider = document.getElementById("logoSizeSlider");
 
       let uploadedImage = new Image();
-      let imageScale = 1.5;
       let imageLoaded = false;
 
       logo.onload = () => {
@@ -132,8 +130,8 @@
         const maxHeight = window.innerHeight * 0.75;
         const aspectRatio = uploadedImage.width / uploadedImage.height;
 
-        let drawWidth = uploadedImage.width * imageScale;
-        let drawHeight = uploadedImage.height * imageScale;
+        let drawWidth = uploadedImage.width * scale;
+        let drawHeight = uploadedImage.height * scale;
 
         if (drawWidth > maxWidth) {
           drawWidth = maxWidth;
