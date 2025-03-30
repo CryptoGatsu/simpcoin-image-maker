@@ -102,8 +102,8 @@
       const maxHeight = window.innerHeight * 0.6;
       const aspectRatio = uploadedImage.width / uploadedImage.height;
 
-      let drawWidth = uploadedImage.width;
-      let drawHeight = uploadedImage.height;
+      let drawWidth = uploadedImage.width * 2;
+      let drawHeight = uploadedImage.height * 2;
 
       if (fitToScreen || drawWidth > maxWidth) {
         drawWidth = maxWidth;
