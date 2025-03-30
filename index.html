@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simpcoin Image Maker</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f9f9f9; }
+    canvas { border: 1px solid #ccc; cursor: crosshair; }
+    #controls { margin: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Simpcoin Image Maker</h1>
+  <div id="controls">
+    <input type="file" id="bgUpload" accept="image/*">
+    <button onclick="download()">Download</button>
+  </div>
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let bgImage = new Image();
+    const logo = new Image();
+    logo.src = 'SimpcoinLogo.png';
+
+    let logoX = 100, logoY = 100;
+    let dragging = false;
+
+    logo.onload = () => draw();
+
+    document.getElementById('bgUpload').addEventListener('change', function(e) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        bgImage.src = event.target.result;
+        bgImage.onload = draw;
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      const { offsetX, offsetY } = e;
+      if (offsetX > logoX && offsetX < logoX + 100 &&
+          offsetY > logoY && offsetY < logoY + 100) {
+        dragging = true;
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => dragging = false);
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (dragging) {
+        logoX = e.offsetX - 50;
+        logoY = e.offsetY - 50;
+        draw();
+      }
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (bgImage.src) ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(logo, logoX, logoY, 100, 100);
+    }
+
+    function download() {
+      const link = document.createElement('a');
+      link.download = 'simpcoin_image.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  </script>
+</body>
+</html>
