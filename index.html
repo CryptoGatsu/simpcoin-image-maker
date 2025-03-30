@@ -162,6 +162,8 @@
         }
       }
 
+      // Mouse and Touch Event Listeners
+      let isPinchStarted = false;
       canvas.addEventListener("mousedown", (e) => {
         if (!isPinching) {
           const rect = canvas.getBoundingClientRect();
@@ -199,6 +201,7 @@
           const touch2 = e.touches[1];
           lastTouchDistance = getDistance(touch1, touch2);
           isPinching = true;
+          isPinchStarted = true;
         }
       }, { passive: false });
 
@@ -216,8 +219,11 @@
       }, { passive: false });
 
       canvas.addEventListener("touchend", () => {
-        isPinching = false;
-        lastTouchDistance = 0;
+        if (isPinchStarted) {
+          isPinching = false;
+          lastTouchDistance = 0;
+          isPinchStarted = false;
+        }
       });
 
       function getDistance(touch1, touch2) {
