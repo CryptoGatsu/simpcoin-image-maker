@@ -53,7 +53,6 @@
   <canvas id="canvas"></canvas>
   <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
-  <button id="shareXBtn" class="action-button">Share to X</button>
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
@@ -172,27 +171,6 @@
         logoX = canvas.width / 2 - logoWidth / 2;
         logoY = canvas.height / 2 - logoHeight / 2;
         draw();
-      });
-
-      document.getElementById("shareXBtn").addEventListener("click", () => {
-        canvas.toBlob((blob) => {
-          if (!blob) {
-            alert("Could not share image. Please try again.");
-            return;
-          }
-
-          const link = document.createElement("a");
-          link.download = "simpcoin-image.png";
-          link.href = canvas.toDataURL("image/png");
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-
-          const tweetText = "Just made this with Simpcoin Image Maker! #Simpcoin";
-          const tweetURL = `https://x.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(link.href)}`;
-
-          window.open(tweetURL, "_blank");
-        });
       });
     });
   </script>
