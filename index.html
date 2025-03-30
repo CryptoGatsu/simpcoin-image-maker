@@ -44,6 +44,26 @@
     #imageUpload {
       margin: 10px;
     }
+
+    #logoSizeSlider {
+      display: none;
+      margin-top: 10px;
+      width: 80%;
+    }
+
+    #logoSizeLabel {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      #logoSizeSlider {
+        display: block;
+      }
+
+      #logoSizeLabel {
+        display: block;
+      }
+    }
   </style>
 </head>
 <body>
@@ -53,6 +73,9 @@
   <canvas id="canvas"></canvas>
   <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
+
+  <label id="logoSizeLabel" for="logoSizeSlider">Logo Size</label>
+  <input type="range" id="logoSizeSlider" min="100" max="500" step="10" value="300" />
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
@@ -68,10 +91,12 @@
       let dragging = false;
       let offsetX = 0;
       let offsetY = 0;
+      let scale = 1;
 
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
       const fileInput = document.getElementById("imageUpload");
+      const logoSizeSlider = document.getElementById("logoSizeSlider");
 
       let uploadedImage = new Image();
       let imageScale = 1.5;
@@ -131,49 +156,10 @@
         ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
 
         if (logoReady) {
-          ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+          ctx.drawImage(logo, logoX, logoY, logoWidth * scale, logoHeight * scale);
         }
       }
 
-      // Mobile touch drag events
-      canvas.addEventListener("touchstart", (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-
-        // Check if the touch is inside the logo
-        if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
-          dragging = true;
-          offsetX = x - logoX;
-          offsetY = y - logoY;
-
-          // Prevent the default touch behavior (scrolling)
-          e.preventDefault();
-        }
-      }, { passive: false });
-
-      canvas.addEventListener("touchmove", (e) => {
-        if (dragging) {
-          const rect = canvas.getBoundingClientRect();
-          const touch = e.touches[0];
-          const x = touch.clientX - rect.left;
-          const y = touch.clientY - rect.top;
-
-          logoX = x - offsetX;
-          logoY = y - offsetY;
-          draw();
-
-          // Prevent the default touch behavior (scrolling)
-          e.preventDefault();
-        }
-      }, { passive: false });
-
-      canvas.addEventListener("touchend", () => {
-        dragging = false;
-      }, { passive: false });
-
-      // Desktop mouse drag events
       canvas.addEventListener("mousedown", (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -197,6 +183,46 @@
       canvas.addEventListener("mouseup", () => dragging = false);
       canvas.addEventListener("mouseleave", () => dragging = false);
 
+      logoSizeSlider.addEventListener("input", (e) => {
+        scale = e.target.value / 300;
+        draw();
+      });
+
+      // Mobile touch drag events
+      canvas.addEventListener("touchstart", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
+          dragging = true;
+          offsetX = x - logoX;
+          offsetY = y - logoY;
+
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchmove", (e) => {
+        if (dragging) {
+          const rect = canvas.getBoundingClientRect();
+          const touch = e.touches[0];
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+
+          logoX = x - offsetX;
+          logoY = y - offsetY;
+          draw();
+
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", () => {
+        dragging = false;
+      }, { passive: false });
+
       document.getElementById("saveBtn").addEventListener("click", () => {
         const link = document.createElement("a");
         link.download = "simpcoin-image.png";
@@ -209,6 +235,8 @@
       document.getElementById("resetLogoBtn").addEventListener("click", () => {
         logoX = canvas.width / 2 - logoWidth / 2;
         logoY = canvas.height / 2 - logoHeight / 2;
+        scale = 1;
+        logoSizeSlider.value = 300;
         draw();
       });
     });
