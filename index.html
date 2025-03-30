@@ -13,6 +13,7 @@
       text-align: center;
       height: 100%;
       overflow-x: hidden;
+      touch-action: none; /* Prevent scrolling during touch drag */
     }
     canvas {
       display: block;
@@ -20,6 +21,7 @@
       background: white;
       border: 2px solid black;
       max-width: 100%;
+      touch-action: none;
     }
     .action-button {
       transition: transform 0.1s, box-shadow 0.1s;
@@ -43,22 +45,6 @@
     #imageUpload {
       margin: 10px;
     }
-
-    #logoSizeSlider {
-      margin-top: 10px;
-      width: 80%;
-      margin-bottom: 10px;
-    }
-
-    #logoSizeLabel {
-      margin-bottom: 5px;
-    }
-
-    @media (max-width: 768px) {
-      #logoSizeSlider {
-        display: block;
-      }
-    }
   </style>
 </head>
 <body>
@@ -66,14 +52,9 @@
   <label for="imageUpload" class="action-button" style="display: inline-block; cursor: pointer;">Choose Image</label>
   <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
   <canvas id="canvas"></canvas>
-
-  <!-- Logo Scaling Slider -->
-  <label id="logoSizeLabel" for="logoSizeSlider">Logo Size</label>
-  <input type="range" id="logoSizeSlider" min="100" max="1000" step="10" value="300" />
-
-  <!-- Action Buttons -->
   <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
+  <button id="shareXBtn" class="action-button">Share to X</button>
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
@@ -84,19 +65,18 @@
 
       let logoX = 0;
       let logoY = 0;
-      let logoWidth = 300;
+      let logoWidth = 450; // Increased from 300 to 450
       let logoHeight = logoWidth / 3;
       let dragging = false;
       let offsetX = 0;
       let offsetY = 0;
-      let scale = 1;
 
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
       const fileInput = document.getElementById("imageUpload");
-      const logoSizeSlider = document.getElementById("logoSizeSlider");
 
       let uploadedImage = new Image();
+      let imageScale = 1.5;
       let imageLoaded = false;
 
       logo.onload = () => {
@@ -130,8 +110,8 @@
         const maxHeight = window.innerHeight * 0.75;
         const aspectRatio = uploadedImage.width / uploadedImage.height;
 
-        let drawWidth = uploadedImage.width * scale;
-        let drawHeight = uploadedImage.height * scale;
+        let drawWidth = uploadedImage.width * imageScale;
+        let drawHeight = uploadedImage.height * imageScale;
 
         if (drawWidth > maxWidth) {
           drawWidth = maxWidth;
@@ -153,11 +133,18 @@
         ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
 
         if (logoReady) {
-          ctx.drawImage(logo, logoX, logoY, logoWidth * scale, logoHeight * scale);
+          ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
         }
       }
 
-      // Mouse and Touch Event Listeners for dragging
+      function getTouchPos(touch) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top
+        };
+      }
+
       canvas.addEventListener("mousedown", (e) => {
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -181,11 +168,29 @@
       canvas.addEventListener("mouseup", () => dragging = false);
       canvas.addEventListener("mouseleave", () => dragging = false);
 
-      // Logo size scaling via slider
-      logoSizeSlider.addEventListener("input", (e) => {
-        scale = e.target.value / 300;
-        draw();
-      });
+      canvas.addEventListener("touchstart", (e) => {
+        if (e.touches.length === 1) {
+          const touch = getTouchPos(e.touches[0]);
+          if (touch.x >= logoX && touch.x <= logoX + logoWidth && touch.y >= logoY && touch.y <= logoY + logoHeight) {
+            dragging = true;
+            offsetX = touch.x - logoX;
+            offsetY = touch.y - logoY;
+            e.preventDefault();
+          }
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchmove", (e) => {
+        if (dragging && e.touches.length === 1) {
+          const touch = getTouchPos(e.touches[0]);
+          logoX = touch.x - offsetX;
+          logoY = touch.y - offsetY;
+          draw();
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", () => dragging = false);
 
       document.getElementById("saveBtn").addEventListener("click", () => {
         const link = document.createElement("a");
@@ -199,9 +204,31 @@
       document.getElementById("resetLogoBtn").addEventListener("click", () => {
         logoX = canvas.width / 2 - logoWidth / 2;
         logoY = canvas.height / 2 - logoHeight / 2;
-        scale = 1;
-        logoSizeSlider.value = 300;
         draw();
+      });
+
+      document.getElementById("shareXBtn").addEventListener("click", () => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            alert("Could not share image. Please try again.");
+            return;
+          }
+
+          const file = new File([blob], "simpcoin-image.png", { type: "image/png" });
+          const data = {
+            files: [file],
+            text: "Just made this with Simpcoin Image Maker! #Simpcoin",
+          };
+
+          if (navigator.canShare && navigator.canShare(data)) {
+            navigator.share(data).catch((err) => {
+              alert("Failed to share. Try using your mobile browser.");
+              console.error(err);
+            });
+          } else {
+            alert("Sharing not supported in this browser. Try using a mobile browser.");
+          }
+        });
       });
     });
   </script>
