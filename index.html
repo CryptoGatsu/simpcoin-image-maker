@@ -52,20 +52,12 @@
   <button id="fitToggleBtn" class="action-button" style="display: none;">Fit to Screen (Mobile)</button>
   <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
-  <button id="changeLogoBtn" class="action-button" style="transition: opacity 0.3s;">Change Logo</button>
-  
+  <button id="shareXBtn" class="action-button">Share</button>
 
   <script>
     const logo = new Image();
-logo.crossOrigin = "anonymous";
-
-const logos = [
-  "https://raw.githubusercontent.com/CryptoGatsu/simpcoin-image-maker/35cf42c8176ce80664d0358556cd365756999871/SimpcoinLogo.png",
-  "https://raw.githubusercontent.com/CryptoGatsu/simpcoin-image-maker/main/public/logo-heart.png",
-  "https://raw.githubusercontent.com/CryptoGatsu/simpcoin-image-maker/main/public/logo-wordmark.png"
-];
-
-logo.src = logos[0];
+    logo.crossOrigin = "anonymous";
+    logo.src = "https://raw.githubusercontent.com/CryptoGatsu/simpcoin-image-maker/35cf42c8176ce80664d0358556cd365756999871/SimpcoinLogo.png";
 
     let logoReady = false;
     let logoX = 0, logoY = 0;
@@ -102,7 +94,7 @@ logo.src = logos[0];
           imageLoaded = true;
           resizeCanvasToImage();
           centerLogo();
-          if (logoReady) draw();
+          draw();
         };
         uploadedImage.src = evt.target.result;
       };
@@ -211,28 +203,23 @@ logo.src = logos[0];
       draw();
     });
 
-    document.getElementById("changeLogoBtn").addEventListener("click", () => {
-  const randomIndex = Math.floor(Math.random() * logos.length);
-  const newLogo = new Image();
-  newLogo.crossOrigin = "anonymous";
-  newLogo.onload = () => {
-    const fadeDuration = 300;
-    logoReady = false;
-    const fadeOut = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.globalAlpha = 0.3;
-      ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
-      ctx.globalAlpha = 0.3;
-      ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-    };
-    fadeOut();
-    setTimeout(() => {
-      logo.src = newLogo.src;
-      logoReady = true;
-      draw();
-    }, fadeDuration);
-  };
-  newLogo.src = logos[randomIndex];
-});
+    document.getElementById("shareXBtn").addEventListener("click", () => {
+      canvas.toBlob((blob) => {
+        if (!blob) return alert("Could not create image.");
 
+        const file = new File([blob], "simpcoin-image.png", { type: "image/png" });
+        const shareData = {
+          files: [file],
+          text: "Just made this with Simpcoin Image Maker! #Simpcoin",
+        };
 
+        if (navigator.canShare && navigator.canShare(shareData)) {
+          navigator.share(shareData).catch(() => alert("Share failed"));
+        } else {
+          alert("Sharing not supported in this browser.");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
