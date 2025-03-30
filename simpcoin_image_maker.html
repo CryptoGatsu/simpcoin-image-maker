@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simpcoin Image Maker</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: white;
+      border: 2px solid black;
+      max-width: 100%;
+    }
+    .action-button {
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .action-button:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+    }
+
+    .action-button {
+      background: #ff1a1a;
+      color: white;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px 8px;
+      border: none;
+    }
+    #imageUpload {
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simpcoin Image Maker</h1>
+  <label for="imageUpload" class="action-button" style="display: inline-block; cursor: pointer;">Choose Image</label>
+  <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
+  <canvas id="canvas"></canvas>
+  <button id="saveBtn" class="action-button">Save Image</button>
+  <button id="resetLogoBtn" class="action-button">Reset Logo</button>
+  <button id="shareXBtn" class="action-button">Share to X</button>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const logo = new Image();
+      logo.crossOrigin = "anonymous";
+      logo.src = "https://raw.githubusercontent.com/CryptoGatsu/simpcoin-image-maker/35cf42c8176ce80664d0358556cd365756999871/SimpcoinLogo.png";
+      let logoReady = false;
+
+      let logoX = 0;
+      let logoY = 0;
+      let logoWidth = 300;
+      let logoHeight = logoWidth / 3;
+      let dragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const fileInput = document.getElementById("imageUpload");
+
+      let uploadedImage = new Image();
+      let imageScale = 1.5;
+      let imageLoaded = false;
+
+      logo.onload = () => {
+        logoReady = true;
+        logoX = canvas.width / 2 - logoWidth / 2;
+        logoY = canvas.height / 2 - logoHeight / 2;
+        if (imageLoaded) draw();
+      };
+
+      fileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          uploadedImage = new Image();
+          uploadedImage.onload = () => {
+            imageLoaded = true;
+            resizeCanvasToImage();
+            logoX = canvas.width / 2 - logoWidth / 2;
+            logoY = canvas.height / 2 - logoHeight / 2;
+            draw();
+          };
+          uploadedImage.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      function resizeCanvasToImage() {
+        const maxWidth = window.innerWidth * 0.9;
+        const maxHeight = window.innerHeight * 0.75;
+        const aspectRatio = uploadedImage.width / uploadedImage.height;
+
+        let drawWidth = uploadedImage.width * imageScale;
+        let drawHeight = uploadedImage.height * imageScale;
+
+        if (drawWidth > maxWidth) {
+          drawWidth = maxWidth;
+          drawHeight = drawWidth / aspectRatio;
+        }
+
+        if (drawHeight > maxHeight) {
+          drawHeight = maxHeight;
+          drawWidth = drawHeight * aspectRatio;
+        }
+
+        canvas.width = drawWidth;
+        canvas.height = drawHeight;
+        canvas.style.marginTop = `${(window.innerHeight - drawHeight) / 2}px`;
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+
+        if (logoReady) {
+          ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+        }
+      }
+
+      canvas.addEventListener("mousedown", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
+          dragging = true;
+          offsetX = x - logoX;
+          offsetY = y - logoY;
+        }
+      });
+
+      canvas.addEventListener("mousemove", (e) => {
+        if (dragging) {
+          const rect = canvas.getBoundingClientRect();
+          logoX = e.clientX - rect.left - offsetX;
+          logoY = e.clientY - rect.top - offsetY;
+          draw();
+        }
+      });
+
+      canvas.addEventListener("mouseup", () => dragging = false);
+      canvas.addEventListener("mouseleave", () => dragging = false);
+
+      document.getElementById("saveBtn").addEventListener("click", () => {
+        const link = document.createElement("a");
+        link.download = "simpcoin-image.png";
+        link.href = canvas.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
+
+      document.getElementById("resetLogoBtn").addEventListener("click", () => {
+        logoX = canvas.width / 2 - logoWidth / 2;
+        logoY = canvas.height / 2 - logoHeight / 2;
+        draw();
+      });
+
+      document.getElementById("shareXBtn").addEventListener("click", () => {
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            alert("Could not share image. Please try again.");
+            return;
+          }
+
+          const link = document.createElement("a");
+          link.download = "simpcoin-image.png";
+          link.href = canvas.toDataURL("image/png");
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          const tweetText = "Just made this with Simpcoin Image Maker! #Simpcoin";
+          const tweetURL = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(link.href)}`;
+
+          window.open(tweetURL, "_blank");
+        });
+      });
+    });
+  </script>
+</body>
+</html>
