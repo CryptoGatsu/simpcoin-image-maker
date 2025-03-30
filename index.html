@@ -57,7 +57,7 @@
 
     let logoReady = false;
     let logoX = 0, logoY = 0;
-    let logoWidth = 1800, logoHeight = logoWidth / 3;
+    let logoWidth = window.innerWidth <= 768 ? 1080 * 1.25 : 1080, logoHeight = logoWidth / 3;
     let dragging = false;
     let offsetX = 0, offsetY = 0;
 
@@ -93,8 +93,10 @@
     });
 
     function resizeCanvasToImage() {
-      const drawWidth = uploadedImage.width * 2;
-      const drawHeight = uploadedImage.height * 2;
+      const aspectRatio = uploadedImage.width / uploadedImage.height;
+      const maxWidth = window.innerWidth * 0.8;
+      const drawWidth = maxWidth;
+      const drawHeight = drawWidth / aspectRatio;
       canvas.width = drawWidth;
       canvas.height = drawHeight;
     }
