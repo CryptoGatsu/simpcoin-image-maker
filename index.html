@@ -20,7 +20,14 @@
       background: white;
       border: 2px solid black;
       max-width: 100%;
-      touch-action: none; /* Only prevent gestures on canvas */
+      touch-action: none;
+    }
+    .action-button {
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .action-button:active {
+      transform: scale(0.97);
+      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
     }
     .action-button {
       background: #ff1a1a;
@@ -31,11 +38,6 @@
       cursor: pointer;
       margin: 10px 8px;
       border: none;
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .action-button:active {
-      transform: scale(0.97);
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
     }
     #imageUpload {
       margin: 10px;
@@ -47,9 +49,10 @@
   <label for="imageUpload" class="action-button" style="display: inline-block; cursor: pointer;">Choose Image</label>
   <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
   <canvas id="canvas"></canvas>
+  <button id="fitToggleBtn" class="action-button" style="display: none;">Fit to Screen (Mobile)</button>
   <button id="saveBtn" class="action-button">Save Image</button>
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
-  <button id="shareXBtn" class="action-button">Share to X</button>
+  <button id="shareXBtn" class="action-button">Share</button>
 
   <script>
     const logo = new Image();
@@ -65,11 +68,16 @@
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     const fileInput = document.getElementById("imageUpload");
+    const fitToggleBtn = document.getElementById("fitToggleBtn");
 
     let uploadedImage = new Image();
     let imageLoaded = false;
+    let fitToScreen = false;
 
     logo.onload = () => {
+      if (window.innerWidth <= 768) {
+        fitToggleBtn.style.display = 'inline-block';
+      }
       logoReady = true;
       centerLogo();
       if (imageLoaded) draw();
@@ -93,6 +101,12 @@
       reader.readAsDataURL(file);
     });
 
+    fitToggleBtn.addEventListener("click", () => {
+      fitToScreen = !fitToScreen;
+      resizeCanvasToImage();
+      draw();
+    });
+
     function resizeCanvasToImage() {
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.6;
@@ -101,7 +115,7 @@
       let drawWidth = uploadedImage.width;
       let drawHeight = uploadedImage.height;
 
-      if (drawWidth > maxWidth) {
+      if (fitToScreen || drawWidth > maxWidth) {
         drawWidth = maxWidth;
         drawHeight = drawWidth / aspectRatio;
       }
@@ -127,7 +141,6 @@
       }
     }
 
-    // Desktop Drag
     canvas.addEventListener("mousedown", (e) => {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -138,18 +151,18 @@
         offsetY = y - logoY;
       }
     });
+
     canvas.addEventListener("mousemove", (e) => {
       if (dragging) {
         const rect = canvas.getBoundingClientRect();
         logoX = e.clientX - rect.left - offsetX;
         logoY = e.clientY - rect.top - offsetY;
-        draw();
+                draw();
       }
     });
     canvas.addEventListener("mouseup", () => dragging = false);
     canvas.addEventListener("mouseleave", () => dragging = false);
 
-    // Mobile Drag
     canvas.addEventListener("touchstart", (e) => {
       if (e.touches.length === 1) {
         const rect = canvas.getBoundingClientRect();
@@ -171,6 +184,7 @@
         const y = e.touches[0].clientY - rect.top;
         logoX = x - offsetX;
         logoY = y - offsetY;
+        constrainLogo();
         draw();
         e.preventDefault();
       }
@@ -178,7 +192,6 @@
 
     canvas.addEventListener("touchend", () => dragging = false);
 
-    // Save
     document.getElementById("saveBtn").addEventListener("click", () => {
       const link = document.createElement("a");
       link.download = "simpcoin-image.png";
@@ -186,13 +199,11 @@
       link.click();
     });
 
-    // Reset
     document.getElementById("resetLogoBtn").addEventListener("click", () => {
       centerLogo();
       draw();
     });
 
-    // Share to X
     document.getElementById("shareXBtn").addEventListener("click", () => {
       canvas.toBlob((blob) => {
         if (!blob) return alert("Could not create image.");
