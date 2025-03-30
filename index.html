@@ -163,13 +163,15 @@
       }
 
       canvas.addEventListener("mousedown", (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
-          dragging = true;
-          offsetX = x - logoX;
-          offsetY = y - logoY;
+        if (!isPinching) {
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
+            dragging = true;
+            offsetX = x - logoX;
+            offsetY = y - logoY;
+          }
         }
       });
 
