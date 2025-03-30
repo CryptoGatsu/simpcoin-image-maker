@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simpcoin Image Maker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      background: #f2f2f2;
+      touch-action: none; /* prevent default scrolling on mobile */
+    }
+    canvas {
+      border: 2px solid black;
+      margin-top: 20px;
+      max-width: 100%;
+      touch-action: none; /* disable default gestures */
+    }
+    #uploadLabel {
+      background: #ff1a1a;
+      color: white;
+      padding: 12px 24px;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-block;
+    }
+    #imageUpload { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Simpcoin Image Maker</h1>
+  <label for="imageUpload" id="uploadLabel">Choose Image</label>
+  <input type="file" id="imageUpload" accept="image/*" />
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let bgImage = new Image();
+    let logo = new Image();
+    let bgLoaded = false;
+    let logoLoaded = false;
+
+    logo.src = "SimpcoinLogo.png";
+    logo.onload = () => {
+      logoLoaded = true;
+    };
+
+    let logoX = 300, logoY = 200, logoWidth = 150;
+    const logoAspectRatio = 1 / 3;
+    let dragging = false;
+    let offsetX = 0, offsetY = 0;
+
+    document.getElementById("imageUpload").addEventListener("change", function(e) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        bgImage = new Image();
+        bgImage.onload = function() {
+          bgLoaded = true;
+          resetLogo();
+        };
+        bgImage.src = event.target.result;
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (bgLoaded) {
+        const imgAspect = bgImage.width / bgImage.height;
+        const canvasAspect = canvas.width / canvas.height;
+        let drawWidth, drawHeight;
+        if (imgAspect > canvasAspect) {
+          drawWidth = canvas.width;
+          drawHeight = canvas.width / imgAspect;
+        } else {
+          drawHeight = canvas.height;
+          drawWidth = canvas.height * imgAspect;
+        }
+        const dx = (canvas.width - drawWidth) / 2;
+        const dy = (canvas.height - drawHeight) / 2;
+        ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
+      }
+
+      if (logoLoaded) {
+        const logoHeight = logoWidth * logoAspectRatio;
+        ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(logoX, logoY, logoWidth, logoHeight);
+      }
+    }
+
+    function resetLogo() {
+      logoWidth = 150;
+      logoX = canvas.width / 2 - logoWidth / 2;
+      logoY = canvas.height / 2 - (logoWidth * logoAspectRatio) / 2;
+      draw();
+    }
+
+    function getTouchPos(touch) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 1) {
+        const pos = getTouchPos(e.touches[0]);
+        const logoH = logoWidth * logoAspectRatio;
+        if (
+          pos.x >= logoX &&
+          pos.x <= logoX + logoWidth &&
+          pos.y >= logoY &&
+          pos.y <= logoY + logoH
+        ) {
+          dragging = true;
+          offsetX = pos.x - logoX;
+          offsetY = pos.y - logoY;
+          e.preventDefault();
+        }
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("touchmove", (e) => {
+      if (dragging && e.touches.length === 1) {
+        const pos = getTouchPos(e.touches[0]);
+        logoX = pos.x - offsetX;
+        logoY = pos.y - offsetY;
+        draw();
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", () => {
+      dragging = false;
+    });
+
+    canvas.addEventListener("mousedown", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const logoH = logoWidth * logoAspectRatio;
+      if (
+        x >= logoX &&
+        x <= logoX + logoWidth &&
+        y >= logoY &&
+        y <= logoY + logoH
+      ) {
+        dragging = true;
+        offsetX = x - logoX;
+        offsetY = y - logoY;
+      }
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (dragging) {
+        const rect = canvas.getBoundingClientRect();
+        logoX = e.clientX - rect.left - offsetX;
+        logoY = e.clientY - rect.top - offsetY;
+        draw();
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => dragging = false);
+    canvas.addEventListener("mouseleave", () => dragging = false);
+  </script>
+</body>
+</html>
