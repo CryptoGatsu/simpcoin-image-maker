@@ -94,7 +94,7 @@
 
     function resizeCanvasToImage() {
       const aspectRatio = uploadedImage.width / uploadedImage.height;
-      const maxWidth = window.innerWidth * 0.8;
+      const maxWidth = Math.min(window.innerWidth * 0.8, uploadedImage.width);
       const drawWidth = maxWidth;
       const drawHeight = drawWidth / aspectRatio;
       canvas.width = drawWidth;
