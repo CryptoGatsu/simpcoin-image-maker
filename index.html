@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simpcoin Image Maker</title>
+  <style>
+    body { margin: 0; background: #000; display: flex; flex-direction: column; align-items: center; }
+    canvas { touch-action: none; border: 1px solid #ccc; }
+    #controls { margin: 10px; color: #fff; }
+    #slider, #rotationSlider { width: 300px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1 style="color:white;">Simpcoin Image Maker</h1>
+  <div id="controls">
+    <input type="file" id="bgUpload" accept="image/*"><br>
+    <label>Resize Logo:</label>
+    <input type="range" id="slider" min="30" max="300" value="100"><br>
+    <label>Rotate Logo:</label>
+    <input type="range" id="rotationSlider" min="0" max="360" value="0"><br>
+    <button onclick="download()">Download</button>
+  </div>
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const slider = document.getElementById('slider');
+    const rotationSlider = document.getElementById('rotationSlider');
+
+    const logo = new Image();
+    logo.src = 'SimpcoinLogo.png';
+
+    let bgImage = new Image();
+    let bgLoaded = false;
+
+    let logoWidth = parseInt(slider.value);
+    let logoX = 100, logoY = 100;
+    let logoRotation = 0;
+    let dragging = false;
+    let offsetX = 0, offsetY = 0;
+
+    logo.onload = () => draw();
+
+    document.getElementById('bgUpload').addEventListener('change', function(e) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        bgImage.src = event.target.result;
+        bgImage.onload = function() {
+          bgLoaded = true;
+          canvas.width = bgImage.width;
+          canvas.height = bgImage.height;
+          draw();
+        };
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+
+    slider.addEventListener('input', () => {
+      logoWidth = parseInt(slider.value);
+      draw();
+    });
+
+    rotationSlider.addEventListener('input', () => {
+      logoRotation = parseFloat(rotationSlider.value) * Math.PI / 180;
+      draw();
+    });
+
+    function isInsideLogo(x, y) {
+      const logoHeight = logoWidth * (logo.height / logo.width);
+      return x >= logoX && x <= logoX + logoWidth &&
+             y >= logoY && y <= logoY + logoHeight;
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (isInsideLogo(e.offsetX, e.offsetY)) {
+        dragging = true;
+        offsetX = e.offsetX - logoX;
+        offsetY = e.offsetY - logoY;
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => dragging = false);
+    canvas.addEventListener('mouseleave', () => dragging = false);
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (dragging) {
+        logoX = e.offsetX - offsetX;
+        logoY = e.offsetY - offsetY;
+        draw();
+      }
+    });
+
+    // Touch support
+    canvas.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      if (isInsideLogo(x, y)) {
+        dragging = true;
+        offsetX = x - logoX;
+        offsetY = y - logoY;
+      }
+    });
+
+    canvas.addEventListener('touchend', () => dragging = false);
+    canvas.addEventListener('touchcancel', () => dragging = false);
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (dragging) {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        logoX = x - offsetX;
+        logoY = y - offsetY;
+        draw();
+      }
+      e.preventDefault();
+    }, { passive: false });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (bgLoaded) {
+        ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+      }
+      const logoHeight = logoWidth * (logo.height / logo.width);
+      ctx.save();
+      ctx.translate(logoX + logoWidth / 2, logoY + logoHeight / 2);
+      ctx.rotate(logoRotation);
+      ctx.drawImage(logo, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight);
+      ctx.restore();
+    }
+
+    function download() {
+      const link = document.createElement('a');
+      link.download = 'simpcoin_image.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+  </script>
+</body>
+</html>
