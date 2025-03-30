@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simpcoin Image Maker</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Bungee', sans-serif;
+      background: linear-gradient(to bottom, #ff1a1a, #ffe6e6);
+      color: white;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 { font-size: 24px; margin-bottom: 10px; }
+    canvas {
+      border: 2px solid #fff;
+      touch-action: none;
+      max-width: 100%;
+      background: #fff;
+    }
+    #uploadLabel {
+      font-size: 18px;
+      margin: 10px;
+      padding: 12px 24px;
+      background: white;
+      color: #ff1a1a;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-block;
+    }
+    #imageUpload { display: none; }
+    #controls { margin-top: 20px; }
+    #controls button {
+      font-size: 18px;
+      margin: 10px;
+      padding: 12px 24px;
+      background: white;
+      color: #ff1a1a;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simpcoin Image Maker</h1>
+  <p>Upload your image, place the Simpcoin logo, and download your masterpiece.</p>
+
+  <label for="imageUpload" id="uploadLabel">Choose Image</label>
+  <input type="file" id="imageUpload" accept="image/*" />
+  <canvas id="canvas" width="800" height="600"></canvas>
+
+  <div id="controls">
+    <button onclick="downloadImage()">Download</button>
+    <button onclick="resetLogo()">Reset Logo</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    let bgImage = new Image();
+    let logo = new Image();
+    let bgLoaded = false;
+    let logoLoaded = false;
+    let showLogo = false;
+
+    logo.src = "SimpcoinLogo.png";  // Ensure SimpcoinLogo.png is present
+
+    let logoX = 300, logoY = 200, logoWidth = 150, logoRotation = 0;
+    const logoAspectRatio = 1 / 3;
+
+    logo.onload = () => {
+      logoLoaded = true;
+      draw();
+    };
+
+    // Image Upload Event
+    document.getElementById("uploadLabel").addEventListener("click", () => {
+      document.getElementById("imageUpload").click();
+    });
+
+    document.getElementById("imageUpload").addEventListener("change", function(e) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        bgImage = new Image();
+        bgImage.onload = function() {
+          bgLoaded = true;
+          showLogo = true;
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          resetLogo();
+        };
+        bgImage.src = event.target.result;
+      };
+      reader.readAsDataURL(e.target.files[0]);
+    });
+
+    // Draw function: Background image and logo
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (bgLoaded) {
+        const imgAspect = bgImage.width / bgImage.height;
+        const canvasAspect = canvas.width / canvas.height;
+        let drawWidth, drawHeight;
+        if (imgAspect > canvasAspect) {
+          drawWidth = canvas.width;
+          drawHeight = canvas.width / imgAspect;
+        } else {
+          drawHeight = canvas.height;
+          drawWidth = canvas.height * imgAspect;
+        }
+        const dx = (canvas.width - drawWidth) / 2;
+        const dy = (canvas.height - drawHeight) / 2;
+        ctx.drawImage(bgImage, dx, dy, drawWidth, drawHeight);
+      }
+      if (logoLoaded && showLogo) {
+        const logoHeight = logoWidth * logoAspectRatio;
+        ctx.save();
+        ctx.translate(logoX + logoWidth / 2, logoY + logoHeight / 2);
+        ctx.rotate(logoRotation);
+        ctx.drawImage(logo, -logoWidth / 2, -logoHeight / 2, logoWidth, logoHeight);
+        ctx.restore();
+      }
+    }
+
+    // Reset Logo position and size
+    function resetLogo() {
+      logoWidth = 150;
+      logoRotation = 0;
+      logoX = canvas.width / 2 - logoWidth / 2;
+      logoY = canvas.height / 2 - (logoWidth * logoAspectRatio) / 2;
+      draw();
+    }
+
+    // Download final image
+    function downloadImage() {
+      const link = document.createElement('a');
+      link.download = 'simpcoin_image_maker.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // Logo interaction (dragging, scaling, rotating)
+    let dragging = false;
+    let offsetX = 0, offsetY = 0;
+    let lastTouchDist = null;
+
+    canvas.addEventListener("mousedown", (e) => {
+      const mx = e.offsetX, my = e.offsetY;
+      const h = logoWidth * logoAspectRatio;
+      if (mx >= logoX && mx <= logoX + logoWidth && my >= logoY && my <= logoY + h) {
+        dragging = true;
+        offsetX = mx - logoX;
+        offsetY = my - logoY;
+      }
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (dragging) {
+        logoX = e.offsetX - offsetX;
+        logoY = e.offsetY - offsetY;
+        draw();
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => dragging = false);
+    canvas.addEventListener("mouseleave", () => dragging = false);
+
+    canvas.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 1) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches[0].clientX - rect.left;
+        const y = e.touches[0].clientY - rect.top;
+        const h = logoWidth * logoAspectRatio;
+        if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + h) {
+          dragging = true;
+          offsetX = x - logoX;
+          offsetY = y - logoY;
+        }
+      }
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      if (e.touches.length === 2) {
+        const rect = canvas.getBoundingClientRect();
+        const x1 = e.touches[0].clientX - rect.left;
+        const y1 = e.touches[0].clientY - rect.top;
+        const x2 = e.touches[1].clientX - rect.left;
+        const y2 = e.touches[1].clientY - rect.top;
+        const dist = Math.hypot(x2 - x1, y2 - y1);
+        if (lastTouchDist) {
+          const delta = dist - lastTouchDist;
+          logoWidth += delta * 1.0;
+          logoWidth = Math.max(30, Math.min(1000, logoWidth));
+        }
+        lastTouchDist = dist;
+        draw();
+        e.preventDefault();
+      } else if (dragging && e.touches.length === 1) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches[0].clientX - rect.left;
+        const y = e.touches[0].clientY - rect.top;
+        logoX = x - offsetX;
+        logoY = y - offsetY;
+        draw();
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    canvas.addEventListener("touchend", () => {
+      dragging = false;
+      lastTouchDist = null;
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") {
+        logoRotation -= Math.PI / 2;
+        draw();
+      } else if (e.key === "ArrowRight") {
+        logoRotation += Math.PI / 2;
+        draw();
+      }
+    });
+  </script>
+</body>
+</html>
