@@ -41,6 +41,7 @@
 <body>
   <h1>Simpcoin Image Maker</h1>
   <canvas id="canvas"></canvas>
+  <div style="margin-top: 60px;"></div>
   <div id="uploadWrapper">
     <label for="imageUpload" class="action-button">Choose Image</label>
     <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
@@ -49,6 +50,9 @@
   <button id="resetLogoBtn" class="action-button">Reset Logo</button>
   <button id="shareBtn" class="action-button">Share</button>
   <button id="saveBtn" class="action-button">Save Image</button>
+  <p style="font-size: 16px; margin-top: 40px; color: #333;">Simpcoin Contract: <strong>HfM475YwaVkB1qkk3gBJb1wRLHKFCNG5bTBKHYgEpump</strong> </p>
+  <p style="font-size: 16px; color: #333;"><a href="https://pump.fun/coin/HfM475YwaVkB1qkk3gBJb1wRLHKFCNG5bTBKHYgEpump" target="_blank" style="color: #ff1a1a; text-decoration: none;">View on Pump.fun</a></p>
+  <p style="font-size: 16px; color: #333;"><a href="https://x.com/SimpcoinMe" target="_blank" style="color: #ff1a1a; text-decoration: none;">Follow us on X</a></p>
 
   <script>
     const logo = new Image();
@@ -70,7 +74,6 @@
 
     logo.onload = () => {
       logoReady = true;
-      // Recalculate logo dimensions after logo loads
       logoWidth = window.innerWidth <= 768 ? 1080 * 1.25 : 1080;
       logoHeight = logoWidth / 3;
       if (!imageLoaded) centerLogo();
@@ -151,9 +154,9 @@
       if (e.touches.length === 1) {
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = (e.touches[0].clientX - rect.left) * scaleX;
-      const y = (e.touches[0].clientY - rect.top) * scaleY;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.touches[0].clientX - rect.left) * scaleX;
+        const y = (e.touches[0].clientY - rect.top) * scaleY;
         if (x >= logoX && x <= logoX + logoWidth && y >= logoY && y <= logoY + logoHeight) {
           dragging = true;
           offsetX = x - logoX;
